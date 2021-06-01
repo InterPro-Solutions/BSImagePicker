@@ -29,6 +29,8 @@ protocol AssetsViewControllerDelegate: class {
     func assetsViewController(_ assetsViewController: AssetsViewController, didLongPressCell cell: AssetCollectionViewCell, displayingAsset asset: PHAsset)
 }
 
+let photoLimited = "PhotoLimited"
+
 class AssetsViewController: UIViewController {
     weak var delegate: AssetsViewControllerDelegate?
     var settings: Settings! {
@@ -50,6 +52,7 @@ class AssetsViewController: UIViewController {
         self.store = store
         dataSource = AssetsCollectionViewDataSource(fetchResult: fetchResult, store: store)
         super.init(nibName: nil, bundle: nil)
+        dataSource.parentController = self
     }
 
     required init?(coder: NSCoder) {
@@ -77,7 +80,14 @@ class AssetsViewController: UIViewController {
         collectionView.delegate = self
         collectionView.dataSource = dataSource
         collectionView.prefetchDataSource = dataSource
+
+        if #available(iOS 14, *) {
+            collectionView.register(AssetLimitedHeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: photoLimited)
+        } else {
+            // Fallback on earlier versions
+        }
         AssetsCollectionViewDataSource.registerCellIdentifiersForCollectionView(collectionView)
+
 
         let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(AssetsViewController.collectionViewLongPressed(_:)))
         longPressRecognizer.minimumPressDuration = 0.5
@@ -171,7 +181,7 @@ class AssetsViewController: UIViewController {
     }
 }
 
-extension AssetsViewController: UICollectionViewDelegate {
+extension AssetsViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         selectionFeedback.selectionChanged()
 
@@ -193,6 +203,22 @@ extension AssetsViewController: UICollectionViewDelegate {
             updateSelectionIndexForCell(at: indexPath)
         }
     }
+
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
+        if #available(iOS 14, *) {
+            if
+                PHPhotoLibrary.authorizationStatus(for: .readWrite) == .limited,
+                let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: photoLimited, for: IndexPath(row: 0, section: section)) as? AssetLimitedHeaderView {
+
+                return CGSize(width: collectionView.frame.width, height: headerView.calculateHeight(collectionView.frame.width))
+            }
+            return .zero
+        } else {
+            return .zero
+        }
+    }
+
+
 
     func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
         guard store.count < settings.selection.max || settings.selection.unselectOnReachingMax else { return false }

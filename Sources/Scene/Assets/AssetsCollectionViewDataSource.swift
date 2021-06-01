@@ -24,6 +24,9 @@ import UIKit
 import Photos
 
 class AssetsCollectionViewDataSource : NSObject, UICollectionViewDataSource {
+
+    weak var parentController : UIViewController?
+    
     private static let assetCellIdentifier = "AssetCell"
     private static let videoCellIdentifier = "VideoCell"
     
@@ -61,6 +64,20 @@ class AssetsCollectionViewDataSource : NSObject, UICollectionViewDataSource {
         return fetchResult.count
     }
     
+    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        let reusableView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: photoLimited, for: indexPath)
+        if #available(iOS 14, *) {
+            if let limitedHeaderView = reusableView as? AssetLimitedHeaderView{
+                limitedHeaderView.parentController = self.parentController
+            }
+        } else {
+            // Fallback on earlier versions
+        }
+        return reusableView
+    }
+
+
+
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let asset = fetchResult[indexPath.row]
         let animationsWasEnabled = UIView.areAnimationsEnabled
