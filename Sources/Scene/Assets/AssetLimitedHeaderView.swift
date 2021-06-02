@@ -46,7 +46,7 @@ class AssetLimitedHeaderView : UICollectionReusableView {
             NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14),
             NSAttributedString.Key.paragraphStyle : paragraphStyle
         ]
-        label.attributedText = NSMutableAttributedString(string: "You've allowed access to select photos. You can add more or allow access to all photos.", attributes: titleAttributes)
+        label.attributedText = NSMutableAttributedString(string: "You have allowed access to a pre-selected subset of photos and videos.  Select \"Manage\" to update this list.", attributes: titleAttributes)
         label.numberOfLines = 0
         self.titleLabel = label
 
